@@ -1,22 +1,41 @@
 # cscsi550_final
 
 # Start up your mongo daemon
->$ mongod
+<p><code>$ mongod</p></code>
 
 # Enter mongo console
->$ mongo
+<p><code>$ mongo</p></code>
 
 # create mongo db
->\> use yelpData
->\> exit
+<p><code>> use yelpData </p></code>
+<p><code>> exit</p></code>
 
 # Import data into mongo
->$ mongoimport --db yelpData --collection businesses --type json --file ~/Desktop/yelp_dataset/yelp_academic_dataset_business.json 
->$ mongoimport --db yelpData --collection reviews --type json --file ~/Desktop/yelp_dataset/yelp_academic_dataset_review.json
->$ mongoimport --db yelpData --collection users --type json --file ~/Desktop/yelp_dataset/yelp_academic_dataset_user.json
+<p><code>$ mongoimport --db yelpData --collection businesses --type json --file ~/Desktop/yelp_dataset/yelp_academic_dataset_business.json</p></code>
+<p><code>$ mongoimport --db yelpData --collection reviews --type json --file ~/Desktop/yelp_dataset/yelp_academic_dataset_review.json</p></code>
+<p><code>$ mongoimport --db yelpData --collection users --type json --file ~/Desktop/yelp_dataset/yelp_academic_dataset_user.json</p></code>
 
 # Start up mongo again
->$ mongo
+<p><code>$ mongo</p></code>
+<p><code>> use yelpData </p></code>
+
+# Delete all reviews that belong to businesses that are not restaurants
+<p><code>> db.reviews.deleteMany({ business_id: {$in: db.businesses.distinct("business_id", { categories: { $not: /Restaurants/ }}) } })</p></code>
 
 # Delete all businesses that are not restaurants
->\> db.businesses.deleteMany({ categories: { $not: /Restaurants/ }})
+<p><code>> db.businesses.deleteMany({ categories: { $not: /Restaurants/ }})</p></code>
+
+# Find all users who have a review in the review collection and write to the users collection
+<p><code>> db.tempUsers.find({ user_id: {$in: db.reviews.aggregate([{"$group" : {_id:"$user_id"}}], {allowDiskUse:true}).map(function(el) { db.users.insert(db.tempUsers.findOne({ user_id: el._id})) })}})</p></code>
+
+# Get number of review counts per user
+<p><code>db.createCollection("users")</code></p>
+<p><code>db.createCollection("temp")</code></p>
+
+# Aggregate reviews and group by user id
+<p><code>db.reviews.aggregate([{"$group" : {_id:"$user_id"}}], {allowDiskUse:true}).map(function(el) { return el._id })</code></p>
+
+
+# Install pymongo if you don't have it
+<p><code>$ pip3 install pymongo</p></code>
+ 
