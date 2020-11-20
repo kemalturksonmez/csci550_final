@@ -25,16 +25,8 @@
 # Delete all businesses that are not restaurants
 <p><code>> db.businesses.deleteMany({ categories: { $not: /Restaurants/ }})</p></code>
 
-# Find all users who have a review in the review collection and write to the users collection
-<p><code>> db.tempUsers.find({ user_id: {$in: db.reviews.aggregate([{"$group" : {_id:"$user_id"}}], {allowDiskUse:true}).map(function(el) { db.users.insert(db.tempUsers.findOne({ user_id: el._id})) })}})</p></code>
-
-# Get number of review counts per user
-<p><code>db.createCollection("users")</code></p>
-<p><code>db.createCollection("temp")</code></p>
-
 # Aggregate reviews and group by user id
 <p><code>db.reviews.aggregate([{"$group" : {_id:"$user_id"}}], {allowDiskUse:true}).map(function(el) { return el._id })</code></p>
-
 
 # Install pymongo if you don't have it
 <p><code>$ pip3 install pymongo</p></code>
