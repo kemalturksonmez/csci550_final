@@ -66,3 +66,19 @@ for review in reviews:
 
 print(util_mat)
 
+users_to_delete = list()
+
+c = 0
+reduced_util = list()
+for user in util_mat:
+    review_count = 0
+    for r in user:
+        if r > 0:
+            review_count += 1
+    
+    if review_count > 5:
+        reduced_util.append(user)
+    
+
+numpy.savetxt('cat_mat.txt', cat_mat, fmt="%d")
+numpy.savetxt('util_mat.txt', reduced_util, fmt="%.2f")
