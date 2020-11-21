@@ -1,11 +1,11 @@
 from pymongo import MongoClient
 import numpy as np
 import pandas as pd
+
 client = MongoClient('127.0.0.1',port=27017)
 db = client["yelpData"]
+
 class DataProcessing:
-
-
     def __init__(self,city):
         #will contain categories as keys, unique index as value
         self.categories = dict()
@@ -19,13 +19,14 @@ class DataProcessing:
         #Will contain busniess id as key, unique index as value
         self.restaurants = dict()
 
+        self.userAverageRating = dict()
+
         #Get businesses from city
         businesses = db.businesses.find({ "city": city}, no_cursor_timeout=True)
 
 
         #This loop populates most of the above variables
         count = 0
-        num_businesses = 0
         user_counter = 0
         restaurant_counter = 0
         for business in businesses:
@@ -40,6 +41,7 @@ class DataProcessing:
             review_list = db.reviews.find({"business_id": business["business_id"]})
             for review in review_list:
                 if self.users.get(review["user_id"]) is None:
+                    self.userAverageRating[review["user_id"]] = review["average_stars"]
                     self.users[review["user_id"]] = user_counter
                     user_counter += 1
                 self.reviews.append((review["business_id"], review["user_id"], review["stars"]))
@@ -50,17 +52,16 @@ class DataProcessing:
                 if self.categories.get(category) is None:           
                     self.categories[category] = count
                     count += 1
-
-            #Keep track of total number of businesses
-            num_businesses += 1
+        
+        businesses.close()
 
     def createMatrices(self):
         # rows, cols = df.shape
-        businesses.close()
+        
         businesses = db.businesses.find({ "city": "Montreal"}, no_cursor_timeout=True)
 
         #create category matrix of size # categories x # businesses
-        self.cat_mat = np.zeros((count, num_businesses))
+        self.cat_mat = np.zeros(len(self.categories), len(self.restaurants))
 
         # print(cat_mat.shape)
 
@@ -74,12 +75,12 @@ class DataProcessing:
 
         # for row in cat_mat:
         #     print(row)
-        print(self.cat_mat)
+        #print(self.cat_mat)
 
-        print(user_counter)
+        #print(user_counter)
 
         #Create utility matrix of size #customers x # businesses
-        self.util_mat = np.zeros((user_counter, num_businesses))
+        self.util_mat = np.zeros((len(self.users), len(self.restaurants)))
 
         #Populate utility matrix
         for review in self.reviews:
@@ -92,24 +93,47 @@ class DataProcessing:
         print(self.util_mat)
 
         #Remove users with less than 5 reviews.
-        c = 0
-        reduced_util = list()
-        for user in self.util_mat:
-            review_count = 0
-            for r in user:
-                if r > 0:
-                    review_count += 1
+        # might not need?
+        # c = 0
+        # reduced_util = list()
+        # for user in self.util_mat:
+        #     review_count = 0
+        #     for r in user:
+        #         if r > 0:
+        #             review_count += 1
             
-            if review_count > 5:
-                reduced_util.append(user)
-        self.util_mat = reduced_util
+        #     if review_count >= 5:
+        #         reduced_util.append(user)
+        # self.util_mat = reduced_util
+        
         businesses.close()
 
         return self.cat_mat, self.util_mat
 
+    #return normalized flavor town
     def getFlavorTown(self):
         flavorTown = np.matmul(self.util_mat,self.cat_mat.T)
+        
+        #normalize by row
+
         return flavorTown
+
+    #Get normalized util matrix
+    def getNormalizedUtilMat(self):
+        uids = self.users.keys()
+        norm_util = np.zeros(self.util_mat.shape)
+
+        userNum = 0
+        for user in self.util_mat:
+            revNum = 0
+            for review in user:
+                if review != 0:
+                    norm_util[userNum][revNum] = review - self.userAverageRating[uids[userNum]]
+                revNum += 1
+
+            userNum += 1
+
+        return norm_util
 
     def saveToText(self):
         np.savetxt('cat_mat.txt', self.cat_mat, fmt="%d")
