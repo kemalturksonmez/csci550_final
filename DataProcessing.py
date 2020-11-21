@@ -1,5 +1,5 @@
 from pymongo import MongoClient
-import numpy
+import numpy as np
 import pandas as pd
 client = MongoClient('127.0.0.1',port=27017)
 db = client["yelpData"]
@@ -20,7 +20,6 @@ class DataProcessing:
         self.restaurants = dict()
 
         #Get businesses from city
-        city = "Montreal"
         businesses = db.businesses.find({ "city": city}, no_cursor_timeout=True)
 
 
@@ -61,7 +60,7 @@ class DataProcessing:
         businesses = db.businesses.find({ "city": "Montreal"}, no_cursor_timeout=True)
 
         #create category matrix of size # categories x # businesses
-        self.cat_mat = numpy.zeros((count, num_businesses))
+        self.cat_mat = np.zeros((count, num_businesses))
 
         # print(cat_mat.shape)
 
@@ -80,7 +79,7 @@ class DataProcessing:
         print(user_counter)
 
         #Create utility matrix of size #customers x # businesses
-        self.util_mat = numpy.zeros((user_counter, num_businesses))
+        self.util_mat = np.zeros((user_counter, num_businesses))
 
         #Populate utility matrix
         for review in self.reviews:
@@ -108,7 +107,11 @@ class DataProcessing:
 
         return self.cat_mat, self.util_mat
 
+    def getFlavorTown(self):
+        flavorTown = np.matmul(self.util_mat,self.cat_mat.T)
+        return flavorTown
+
     def saveToText(self):
-        numpy.savetxt('cat_mat.txt', self.cat_mat, fmt="%d")
-        numpy.savetxt('util_mat.txt', self.util_mat, fmt="%.2f")
+        np.savetxt('cat_mat.txt', self.cat_mat, fmt="%d")
+        np.savetxt('util_mat.txt', self.util_mat, fmt="%.2f")
 
