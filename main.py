@@ -33,7 +33,7 @@ for business in businesses:
         restaurants[business["business_id"]] = restaurant_counter
         restaurant_counter += 1
 
-
+  
     #Populate reviews
     review_list = db.reviews.find({"business_id": business["business_id"]})
     for review in review_list:
@@ -53,7 +53,7 @@ for business in businesses:
     num_businesses += 1
 
 # rows, cols = df.shape
-
+businesses.close()
 businesses = db.businesses.find({ "city": "Montreal"}, no_cursor_timeout=True)
 
 #create category matrix of size # categories x # businesses
@@ -100,6 +100,6 @@ for user in util_mat:
     if review_count > 5:
         reduced_util.append(user)
     
-
+businesses.close()
 numpy.savetxt('cat_mat.txt', cat_mat, fmt="%d")
 numpy.savetxt('util_mat.txt', reduced_util, fmt="%.2f")
