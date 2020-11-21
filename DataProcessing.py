@@ -19,10 +19,8 @@ class DataProcessing:
         #Will contain busniess id as key, unique index as value
         self.restaurants = dict()
 
-        self.userAverageRating = dict()
-
         #Get businesses from city
-        businesses = db.businesses.find({ "city": city}, no_cursor_timeout=True)
+        businesses = db.businesses.find({ "city": city})
 
 
         #This loop populates most of the above variables
@@ -41,7 +39,6 @@ class DataProcessing:
             review_list = db.reviews.find({"business_id": business["business_id"]})
             for review in review_list:
                 if self.users.get(review["user_id"]) is None:
-                    self.userAverageRating[review["user_id"]] = review["average_stars"]
                     self.users[review["user_id"]] = user_counter
                     user_counter += 1
                 self.reviews.append((review["business_id"], review["user_id"], review["stars"]))
@@ -58,7 +55,7 @@ class DataProcessing:
     def createMatrices(self):
         # rows, cols = df.shape
         
-        businesses = db.businesses.find({ "city": "Montreal"}, no_cursor_timeout=True)
+        businesses = db.businesses.find({ "city": "Montreal"})
 
         #create category matrix of size # categories x # businesses
         self.cat_mat = np.zeros(len(self.categories), len(self.restaurants))
@@ -114,21 +111,30 @@ class DataProcessing:
     def getFlavorTown(self):
         flavorTown = np.matmul(self.util_mat,self.cat_mat.T)
         
-        #normalize by row
+        rowSums = flavorTown.max(axis=1)
+        normalFlavor = flavorTown / rowSums[:, np.newaxis]
 
-        return flavorTown
+        return normalFlavor
+
+    #return single user's normalized flavor vector
+    def getFlavorVector(self,userInfo):
+        flavorTown = np.matmul(userInfo,self.cat_mat.T)
+        
+        rowSums = flavorTown.max(axis=1)
+        normalFlavor = flavorTown / rowSums[:, np.newaxis]
+
+        return normalFlavor
 
     #Get normalized util matrix
     def getNormalizedUtilMat(self):
-        uids = self.users.keys()
         norm_util = np.zeros(self.util_mat.shape)
 
-        userNum = 0
-        for user in self.util_mat:
-            revNum = 0
-            for review in user:
+        #Bit of black magic to get average stars per user
+        avgStars = np.true_divide(self.util_mat.sum(1),(self.util_mat!=0).sum(1))
+        for user,userNum in enumerate(self.util_mat):
+            for review,revNum in enumerate(user):
                 if review != 0:
-                    norm_util[userNum][revNum] = review - self.userAverageRating[uids[userNum]]
+                    norm_util[userNum][revNum] = review - avgStars[userNum]
                 revNum += 1
 
             userNum += 1
