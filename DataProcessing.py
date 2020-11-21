@@ -6,7 +6,7 @@ client = MongoClient('127.0.0.1',port=27017)
 db = client["yelpData"]
 
 class DataProcessing:
-    def __init__(self,city):
+    def initialDataProcessing(self,city):
         #will contain categories as keys, unique index as value
         self.categories = dict()
 
@@ -46,29 +46,27 @@ class DataProcessing:
             #populate categories
             category_list = [x.strip() for x in business["categories"].split(',')]
             for category in category_list:
-                if self.categories.get(category) is None:           
+                if (self.categories.get(category) is None) and (category != 'Restaurants'):           
                     self.categories[category] = count
                     count += 1
         
         businesses.close()
 
     def createMatrices(self):
-        # rows, cols = df.shape
         
         businesses = db.businesses.find({ "city": "Montreal"})
 
         #create category matrix of size # categories x # businesses
-        self.cat_mat = np.zeros(len(self.categories), len(self.restaurants))
-
-        # print(cat_mat.shape)
+        self.cat_mat = np.zeros((len(self.categories), len(self.restaurants)))
 
         #Populate category matrix
         for business in businesses:
             category_list = [x.strip() for x in business["categories"].split(',')]
 
             for category in category_list:
-                #For each category, set the value where the category row and business column intersect.
-                self.cat_mat[self.categories[category]][self.restaurants[business["business_id"]]] = 1  
+                if category != 'Restaurants':
+                    #For each category, set the value where the category row and business column intersect.
+                    self.cat_mat[self.categories[category]][self.restaurants[business["business_id"]]] = 1  
 
         # for row in cat_mat:
         #     print(row)
@@ -87,7 +85,7 @@ class DataProcessing:
 
             self.util_mat[uid][bid] = star
 
-        print(self.util_mat)
+        
 
         #Remove users with less than 5 reviews.
         # might not need?
@@ -105,43 +103,37 @@ class DataProcessing:
         
         businesses.close()
 
+        np.savetxt('cat_mat.txt', self.cat_mat, fmt="%.2f")
+        np.savetxt('util_mat.txt', self.util_mat, fmt="%.2f")
+
         return self.cat_mat, self.util_mat
 
-    #return normalized flavor town
-    def getFlavorTown(self):
-        flavorTown = np.matmul(self.util_mat,self.cat_mat.T)
+    #return normalized flavor town (or single user if user's row in utility matrix is passed in as utilMatrix)
+    def getFlavorTown(self,utilMatrix,categoryMatrix):
+        flavorTown = np.matmul(utilMatrix,categoryMatrix.T)
         
-        rowSums = flavorTown.max(axis=1)
-        normalFlavor = flavorTown / rowSums[:, np.newaxis]
+        for rowNum,row in enumerate(flavorTown):
+            rowMax = np.max(abs(row))
+            for colNum,value in enumerate(row):
+                if value!=0:
+                    flavorTown[rowNum][colNum] = float(value) / float(rowMax)
 
-        return normalFlavor
-
-    #return single user's normalized flavor vector
-    def getFlavorVector(self,userInfo):
-        flavorTown = np.matmul(userInfo,self.cat_mat.T)
-        
-        rowSums = flavorTown.max(axis=1)
-        normalFlavor = flavorTown / rowSums[:, np.newaxis]
-
-        return normalFlavor
+        return flavorTown
 
     #Get normalized util matrix
-    def getNormalizedUtilMat(self):
-        norm_util = np.zeros(self.util_mat.shape)
+    def getNormalizedUtilMat(self,utilMatrix):
+        norm_util = np.zeros(utilMatrix.shape)
 
         #Bit of black magic to get average stars per user
-        avgStars = np.true_divide(self.util_mat.sum(1),(self.util_mat!=0).sum(1))
-        for user,userNum in enumerate(self.util_mat):
-            for review,revNum in enumerate(user):
+        avgStars = np.true_divide(utilMatrix.sum(1),(utilMatrix!=0).sum(1))
+        for userNum,user in enumerate(utilMatrix):
+            for revNum,review in enumerate(user):
                 if review != 0:
-                    norm_util[userNum][revNum] = review - avgStars[userNum]
+                    norm_util[userNum][revNum] = float(review) - avgStars[userNum]
                 revNum += 1
 
             userNum += 1
 
         return norm_util
-
-    def saveToText(self):
-        np.savetxt('cat_mat.txt', self.cat_mat, fmt="%d")
-        np.savetxt('util_mat.txt', self.util_mat, fmt="%.2f")
+        
 
