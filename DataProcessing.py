@@ -27,10 +27,15 @@ class DataProcessing:
         count = 0
         user_counter = 0
         restaurant_counter = 0
-        for business in businesses:
-
-            #Populate restaurants
-            if self.restaurants.get(business["business_id"]) is None:
+        for business in businesses:     
+            #populate categories
+            category_list = [x.strip() for x in business["categories"].split(',')]
+            if len(category_list) >= 3:
+                for category in category_list:
+                    if (self.categories.get(category) is None) and (category != 'Restaurants'):           
+                        self.categories[category] = count
+                        count += 1
+                #Populate restaurants
                 self.restaurants[business["business_id"]] = restaurant_counter
                 restaurant_counter += 1
 
@@ -47,12 +52,7 @@ class DataProcessing:
             review_list.close()
 
 
-            #populate categories
-            category_list = [x.strip() for x in business["categories"].split(',')]
-            for category in category_list:
-                if (self.categories.get(category) is None) and (category != 'Restaurants'):           
-                    self.categories[category] = count
-                    count += 1
+            
         
         businesses.close()
 
@@ -88,13 +88,13 @@ class DataProcessing:
 
         #Populate category matrix
         for business in businesses:
-            category_list = [x.strip() for x in business["categories"].split(',')]
-
-            for category in category_list:
-                if category != 'Restaurants':
-                    #For each category, set the value where the category row and business column intersect.
-                    # self.cat_mat[self.categories[category]][self.restaurants[business["business_id"]]] = 1
-                    self.cat_mat[self.restaurants[business["business_id"]]][self.categories[category]] = 1   
+            if business["business_id"] in self.restaurants:
+                category_list = [x.strip() for x in business["categories"].split(',')]
+                for category in category_list:
+                    if category != 'Restaurants':
+                        #For each category, set the value where the category row and business column intersect.
+                        # self.cat_mat[self.categories[category]][self.restaurants[business["business_id"]]] = 1
+                        self.cat_mat[self.restaurants[business["business_id"]]][self.categories[category]] = 1   
 
         # for row in cat_mat:
         #     print(row)

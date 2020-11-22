@@ -90,20 +90,18 @@ def getSortedItems(row, cluster):
 # catClustGroup -> 0 = Cluster centers
 # catClustGroup -> 1 = Dictionary containing clusters, key is the tuple of the clusters centers
 # returns:
-
 def getDistanceList(testData, flavClustGroup, catClustGroup):
     c = Cluster()
     userClusterList = []
     for row in testData:
         # Find the closest flavor cluster
-        flavDistance = c.find_clusters_distance_sorted(row, flavClustGroup[0])
-        # Find the closest category cluster
-        catDistance = c.find_clusters_distance_sorted(row, catClustGroup[0])
-
-        # userClusterList.append((row, flavDistance[1], catDistance[1]))
-
-        # Get the closest members to the user in a given cluster
-        getSortedItems(row, flavClustGroup[1][flavDistance[1]])
+        rowFlavDistance = c.find_clusters_distance_sorted(row, flavClustGroup[0])
+        # # Find the category cluster thats closest to the flavor cluster
+        flavCatDistance = c.find_clusters_distance_sorted(rowFlavDistance[1], catClustGroup[0])
+        print(row)
+        print()
+        # # Get the closest members to the user in a given cluster
+        getSortedItems(row, catClustGroup[1][flavCatDistance[1]])
 
 
 # Runs cross validation on data
@@ -119,7 +117,7 @@ def crossValidation(utility, cat):
         flavorTown = d.createFlavorMatrix(utility, cat)
         # attach ids
         flavorTown = d.attachId(flavorTown)
-        
+
         cat = d.attachId(cat)
         # split data
         testData, trainData = testTrainSplit(flavorTown, shuffledArray, currIndex)
@@ -129,9 +127,9 @@ def crossValidation(utility, cat):
         getDistanceList([testData[0]], flavClustGroup, catClustGroup)
         
 
-# users, restaurants, cat, utility, flavorTown = createInfo("Montreal")
-users, restaurants, cat, utility = DataProcessing().getAllFiles()
+users, restaurants, cat, utility = createInfo("Montreal")
+# users, restaurants, cat, utility = DataProcessing().getAllFiles()
 # attach ids to data points
-crossValidation(utility, cat)
+# crossValidation(utility, cat)
 
 
