@@ -6,15 +6,7 @@ from copy import deepcopy
 import random
 import matplotlib.pyplot as plt
 class Cluster():
-    def __init__(self):
-        data = np.loadtxt("cat_mat.txt", delimiter=" ")
-        self.numRest = len(data[0])
-        new_centers, clusters = self.get_centroids(data.T, 7, 0.001)
-        print(new_centers)
-        print(clusters)
-        
-
-    def cluster(self, data):
+    def getClusterInfo(self, data):
         out = DBSCAN(eps=1.25, min_samples=2, metric='euclidean').fit(data)
         print(out.labels_)
 
@@ -32,7 +24,7 @@ class Cluster():
         distance = 0
         # doesn't get squared euc distance for final column
         # this is so we don't account for the class while comparing
-        for i in range(len(row)):
+        for i in range(len(row)-1):
             distance += (row[i]-target[i])**2
         return distance
 
