@@ -163,12 +163,16 @@ class DataProcessing:
 
         return norm_util
     
+    def createFlavorMatrix(self, utility, cat):
+        return self.getFlavorTown(self.getNormalizedUtilMat(utility),cat)
+
     def writeSwappedKeys(self, keyDict, fileName):
         tempDict = dict()
         for key,val in keyDict.items():
             tempDict[val] = key
         with open(fileName, 'w+') as outfile:
             json.dump(tempDict, outfile, indent=2)
+
     def getCatMatrix(self):
         return np.loadtxt("cat_mat.txt", delimiter=" ",dtype=float)
     
@@ -193,8 +197,7 @@ class DataProcessing:
         restaurants = self.getRestaurantKeys()
         cat = self.getCatMatrix()
         utility = self.getUtilMatrix()
-        flavorTown = self.getFlavorMatrix()
-        return users, restaurants, cat, utility, flavorTown
+        return users, restaurants, cat, utility
 
     def attachId(self, matrix):
         newMatrix = np.zeros((matrix.shape[0], matrix.shape[1] + 1))

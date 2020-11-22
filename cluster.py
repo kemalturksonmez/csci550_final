@@ -6,8 +6,8 @@ from copy import deepcopy
 import random
 import matplotlib.pyplot as plt
 class Cluster():
-    def getClusterInfo(self, data):
-        out = DBSCAN(eps=1.25, min_samples=2, metric='euclidean').fit(data)
+    def getClusterInfo(self, data, eps, min_samples):
+        out = DBSCAN(eps=2.5, min_samples=2, metric='euclidean').fit(data)
         print(out.labels_)
 
     # gets the mean and standard deviations for each column in the dataset
@@ -28,6 +28,13 @@ class Cluster():
             distance += (row[i]-target[i])**2
         return distance
 
+    def find_clusters_distance_sorted(self, row, centroids):
+        distanceList = []
+        for center in centroids:
+            distanceList.append([self.squared_euclidean_distance(row, center), tuple(center)])
+        distanceList.sort(key=lambda x: x[0]) 
+        return distanceList[0]
+        
     # organizes data set into appropriate clusters
     # data - dataset
     # centers - centroid/medoid set
@@ -52,7 +59,7 @@ class Cluster():
     # new_centers - new centroids
     # old_centers - old centroids
     # returns:
-    # distance - squared distance between new
+    # distance - squared distance between old and new
     def get_difference(self, new_centers, old_centers):
         distance = 0
         for i in range(len(new_centers)):
