@@ -7,12 +7,7 @@ from DataProcessing import DataProcessing
 from cluster import Cluster
 np.set_printoptions(threshold=np.inf)
 
-def createInfo(cityName):
-    d = DataProcessing()
 
-    users, restaurants = d.initialDataProcessing(cityName)
-    cat, utility = d.createMatrices()
-    return users, restaurants, cat, utility
 
 # gets clusters for flavor town and cat
 # cat - category matrix
@@ -25,7 +20,7 @@ def createInfo(cityName):
 def getClusters(cat, flavorTown):
     flavor_centers, flavor_clusters = Cluster().get_centroids(flavorTown, 10, 0.001)
     cat_centers, cat_clusters = Cluster().get_centroids(cat, 7, 0.001)
-    return (flavor_centers, flavor_clusters), (cat_centers, cat_clusters)
+    return (cat_centers, cat_clusters), (flavor_centers, flavor_clusters)
 
 # creates a shuffled array of k indicies that will be used for splitting data
 # utility - user matrix
@@ -81,6 +76,7 @@ def getSortedItems(row, cluster):
         distanceList.append([c.squared_euclidean_distance(row, item), tuple(item)])
     distanceList.sort(key=lambda x: x[0]) 
     print(distanceList)
+    return distanceList
 
 # testData - contains test users
 # flavClustGroup -> tuple = Contains clusters centers and clusters of the flavor group
@@ -126,10 +122,5 @@ def crossValidation(utility, cat):
         flavClustGroup, catClustGroup = getClusters(cat, trainData)
         getDistanceList([testData[0]], flavClustGroup, catClustGroup)
         
-
-users, restaurants, cat, utility = createInfo("Montreal")
-# users, restaurants, cat, utility = DataProcessing().getAllFiles()
-# attach ids to data points
-# crossValidation(utility, cat)
 
 
