@@ -14,11 +14,23 @@ def createInfo(cityName):
     cat, utility = d.createMatrices()
     return users, restaurants, cat, utility
 
+# gets clusters for flavor town and cat
+# cat - category matrix
+# flavorTown - flavorTown matrix
+# returns two tuples:
+# flavor_centers - centers of flavor clusters
+# flavor_clusters - members of flavor clusters
+# cat_centers - centers of category clusters
+# cat_clusters - members of category clusters
 def getClusters(cat, flavorTown):
     flavor_centers, flavor_clusters = Cluster().get_centroids(flavorTown, 10, 0.001)
     cat_centers, cat_clusters = Cluster().get_centroids(cat, 7, 0.001)
     return (flavor_centers, flavor_clusters), (cat_centers, cat_clusters)
 
+# creates a shuffled array of k indicies that will be used for splitting data
+# utility - user matrix
+# returns:
+# shuffledArray - shuffled array of indicies
 def shuffleArray(utility):
     indicies = np.zeros(len(utility))
     for i in range(len(indicies)):
@@ -26,7 +38,10 @@ def shuffleArray(utility):
     shuffle(indicies)
     return indicies
 
-def stratifiedSplit(utility, shuffledArray, currIndex):
+# splits data based on a shuffled array of indicies
+# utility - user matrix
+# shuffledArray - shuffled array of indicies
+def testTrainSplit(utility, shuffledArray, currIndex):
     utilLength = int(len(utility)/10)
     numRows = ((utilLength * currIndex) + utilLength) - (utilLength * currIndex)
 
@@ -45,6 +60,10 @@ def stratifiedSplit(utility, shuffledArray, currIndex):
         trainTracker += 1
     return testData, trainData
 
+# splits a 2D array by removing last column
+# returns:
+# newMatrix - updated 2D array
+# lastCol - last column
 def splitColumn(matrix):
     lastCol = matrix[:,-1]
     print(matrix)
@@ -52,6 +71,9 @@ def splitColumn(matrix):
     print(newMatrix)
     return newMatrix, lastCol
 
+# orders members of a list by similarity to user
+# row - individual row from test set
+# cluster - list of all the items in a cluster
 def getSortedItems(row, cluster):
     c = Cluster()
     distanceList = []
@@ -60,23 +82,31 @@ def getSortedItems(row, cluster):
     distanceList.sort(key=lambda x: x[0]) 
     print(distanceList)
 
+# testData - contains test users
+# flavClustGroup -> tuple = Contains clusters centers and clusters of the flavor group
+# flavClustGroup -> 0 = Cluster centers
+# flavClustGroup -> 1 = Dictionary containing clusters, key is the tuple of the clusters centers
+# catClustGroup -> tuple = Contains clusters centers and clusters of the category group
+# catClustGroup -> 0 = Cluster centers
+# catClustGroup -> 1 = Dictionary containing clusters, key is the tuple of the clusters centers
+# returns:
+
 def getDistanceList(testData, flavClustGroup, catClustGroup):
     c = Cluster()
     userClusterList = []
     for row in testData:
+        # Find the closest flavor cluster
         flavDistance = c.find_clusters_distance_sorted(row, flavClustGroup[0])
+        # Find the closest category cluster
         catDistance = c.find_clusters_distance_sorted(row, catClustGroup[0])
-        userClusterList.append((row, flavDistance[1], catDistance[1]))
+
+        # userClusterList.append((row, flavDistance[1], catDistance[1]))
+
+        # Get the closest members to the user in a given cluster
         getSortedItems(row, flavClustGroup[1][flavDistance[1]])
 
-    # for user in userClusterList:
-    #     print(flavClustGroup)
-        # for clusterMember in flavClustGroup[1][user[1]]:
-        #     getSortedItems(user[0], clusterMember)
-    # print(userClusterList)
-        
 
-
+# Runs cross validation on data
 def crossValidation(utility, cat):
     cvNum = 1
     shuffledArray = shuffleArray(utility)
@@ -85,13 +115,14 @@ def crossValidation(utility, cat):
     # attach ids for users
     # utility = d.attachId(utility)
     for currIndex in range(cvNum):
-        # get flavor matrix
+        # create flavor matrix
         flavorTown = d.createFlavorMatrix(utility, cat)
         # attach ids
         flavorTown = d.attachId(flavorTown)
+        
         cat = d.attachId(cat)
         # split data
-        testData, trainData = stratifiedSplit(flavorTown, shuffledArray, currIndex)
+        testData, trainData = testTrainSplit(flavorTown, shuffledArray, currIndex)
         
         # create clusters
         flavClustGroup, catClustGroup = getClusters(cat, trainData)
