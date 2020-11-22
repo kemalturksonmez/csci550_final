@@ -25,7 +25,7 @@ def getClusters(cat, flavorTown):
     cat = DataProcessing().attachId(cat)
     flavor_centers, flavor_clusters = Cluster().get_centroids(flavorTown, 7, 0.001)
     cat_centers, cat_clusters = Cluster().get_centroids(cat, 7, 0.001)
-    print(cat_centers)
+    
 
 
 # users, restaurants, cat, utility, flavorTown = createInfo("Montreal")
