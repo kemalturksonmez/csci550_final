@@ -42,12 +42,13 @@ class DataProcessing:
             review_list = db.reviews.find({"business_id": business["business_id"]})
 
             for review in review_list:
-                if self.users.get(review["user_id"]) is None:
-                    self.users[review["user_id"]] = [1]
-                else:
-                    self.users[review["user_id"]][0] += 1 
-                self.users[review["user_id"]].append((review["business_id"], review["user_id"], review["stars"]))
-                #self.reviews.append((review["business_id"], review["user_id"], review["stars"]))
+                if review["business_id"] in self.restaurants:
+                    if self.users.get(review["user_id"]) is None:
+                        self.users[review["user_id"]] = [1]
+                    else:
+                        self.users[review["user_id"]][0] += 1 
+                    self.users[review["user_id"]].append((review["business_id"], review["user_id"], review["stars"]))
+                    #self.reviews.append((review["business_id"], review["user_id"], review["stars"]))
 
             review_list.close()
 

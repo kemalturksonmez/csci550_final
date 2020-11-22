@@ -80,7 +80,7 @@ def getSortedItems(row, cluster):
     for item in cluster:
         distanceList.append([c.squared_euclidean_distance(row, item), tuple(item)])
     distanceList.sort(key=lambda x: x[0]) 
-    print(distanceList)
+    print(distanceList[0])
 
 # testData - contains test users
 # flavClustGroup -> tuple = Contains clusters centers and clusters of the flavor group
@@ -130,6 +130,6 @@ def crossValidation(utility, cat):
 users, restaurants, cat, utility = createInfo("Montreal")
 # users, restaurants, cat, utility = DataProcessing().getAllFiles()
 # attach ids to data points
-# crossValidation(utility, cat)
+crossValidation(utility, cat)
 
 
