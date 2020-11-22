@@ -34,14 +34,17 @@ class DataProcessing:
                 self.restaurants[business["business_id"]] = restaurant_counter
                 restaurant_counter += 1
 
-        
-            #Populate reviews
             review_list = db.reviews.find({"business_id": business["business_id"]})
             for review in review_list:
                 if self.users.get(review["user_id"]) is None:
-                    self.users[review["user_id"]] = user_counter
-                    user_counter += 1
-                self.reviews.append((review["business_id"], review["user_id"], review["stars"]))
+                    self.users[review["user_id"]] = [1]
+                else:
+                    self.users[review["user_id"]][0] += 1 
+                self.users[review["user_id"]].append((review["business_id"], review["user_id"], review["stars"]))
+                #self.reviews.append((review["business_id"], review["user_id"], review["stars"]))
+
+            review_list.close()
+
 
             #populate categories
             category_list = [x.strip() for x in business["categories"].split(',')]
@@ -51,6 +54,19 @@ class DataProcessing:
                     count += 1
         
         businesses.close()
+
+        newUsers = dict()
+        for user,value in self.users.items():
+            if value[0] < 3:
+                pass
+            else:
+                for review in range(1,len(value)):
+                    self.reviews.append(value[review])
+
+                newUsers[user] = user_counter
+                user_counter += 1
+        self.users = newUsers
+        print(self.users)
 
     def createMatrices(self):
         
