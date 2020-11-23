@@ -33,7 +33,7 @@ class Cluster():
         for center in centroids:
             distanceList.append([self.squared_euclidean_distance(row, center), tuple(center)])
         distanceList.sort(key=lambda x: x[0]) 
-        return distanceList[0]
+        return distanceList
         
     # organizes data set into appropriate clusters
     # data - dataset

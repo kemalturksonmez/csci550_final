@@ -50,10 +50,7 @@ class DataProcessing:
                     self.users[review["user_id"]].append((review["business_id"], review["user_id"], review["stars"]))
                     #self.reviews.append((review["business_id"], review["user_id"], review["stars"]))
 
-            review_list.close()
-
-
-            
+            review_list.close()     
         
         businesses.close()
 
@@ -71,12 +68,7 @@ class DataProcessing:
         
         self.writeSwappedKeys(self.users, 'users.json')
         self.writeSwappedKeys(self.restaurants, 'businesses.json')
-        # # write user keys to file
-        # with open('users.json', 'w+') as outfile:
-        #     json.dump(self.users, outfile, indent=2)
-        # # write restaurant keys to file
-        # with open('businesses.json', 'w+') as outfile:
-        #     json.dump(self.restaurants, outfile, indent=2)
+
         return self.users, self.restaurants
 
     def createMatrices(self):
@@ -97,12 +89,6 @@ class DataProcessing:
                         # self.cat_mat[self.categories[category]][self.restaurants[business["business_id"]]] = 1
                         self.cat_mat[self.restaurants[business["business_id"]]][self.categories[category]] = 1   
 
-        # for row in cat_mat:
-        #     print(row)
-        #print(self.cat_mat)
-
-        #print(user_counter)
-
         #Create utility matrix of size #customers x # businesses
         self.util_mat = np.zeros((len(self.users), len(self.restaurants)))
 
@@ -113,22 +99,6 @@ class DataProcessing:
             star = review[2]
 
             self.util_mat[uid][bid] = star
-
-        
-
-        #Remove users with less than 5 reviews.
-        # might not need?
-        # c = 0
-        # reduced_util = list()
-        # for user in self.util_mat:
-        #     review_count = 0
-        #     for r in user:
-        #         if r > 0:
-        #             review_count += 1
-            
-        #     if review_count >= 5:
-        #         reduced_util.append(user)
-        # self.util_mat = reduced_util
 
         np.savetxt('cat_mat.txt', self.cat_mat, fmt="%.2f")
         np.savetxt('util_mat.txt', self.util_mat, fmt="%.2f")
@@ -145,7 +115,7 @@ class DataProcessing:
             for colNum,value in enumerate(row):
                 if value!=0:
                     flavorTown[rowNum][colNum] = float(value) / float(rowMax)
-        np.savetxt('flavor_town_mat.txt', flavorTown, fmt="%.2f")
+        
         return flavorTown
 
     #Get normalized util matrix
@@ -174,6 +144,9 @@ class DataProcessing:
         with open(fileName, 'w+') as outfile:
             json.dump(tempDict, outfile, indent=2)
 
+    def writeFlavorMatrix(self, flavorTown):
+        np.savetxt('flavor_town_mat.txt', flavorTown, fmt="%.2f")
+        
     def getCatMatrix(self):
         return np.loadtxt("cat_mat.txt", delimiter=" ",dtype=float)
     
@@ -198,7 +171,8 @@ class DataProcessing:
         restaurants = self.getRestaurantKeys()
         cat = self.getCatMatrix()
         utility = self.getUtilMatrix()
-        return users, restaurants, cat, utility
+        flavorMatrix = self.getFlavorMatrix()
+        return users, restaurants, cat, utility, flavorMatrix
 
     def attachId(self, matrix):
         newMatrix = np.zeros((matrix.shape[0], matrix.shape[1] + 1))
