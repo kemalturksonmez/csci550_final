@@ -51,30 +51,79 @@ class Model():
         userFlavor = self.dp.createFlavorMatrix(user,self.cat[:,:-1])
         userFlavor = self.dp.attachId(userFlavor)
         # Find the closest flavor cluster
-        rowFlavDistance = (self.cluster.find_clusters_distance_sorted(userFlavor, self.flavClusters[0]))[0]
+        rowFlavDistance = (self.find_clusters_distance_sorted_jacc(userFlavor[0], self.flavClusters[0]))[0]
         # # Find the category cluster thats closest to the flavor cluster
-        flavCatDistance = (self.cluster.find_clusters_distance_sorted(rowFlavDistance[1], self.catClusters[0]))[0]
+        flavCatDistance = (self.find_clusters_distance_sorted_jacc(rowFlavDistance[1], self.catClusters[0]))[0]
         # # Get the closest members to the user in a given cluster
-        simRests = self.cluster.find_clusters_distance_sorted(userFlavor, self.catClusters[1][flavCatDistance[1]])
-        restNames = []
-        #print(simRests)
+        simRests = self.find_clusters_distance_sorted_jacc(userFlavor[0], self.catClusters[1][flavCatDistance[1]])
+        simUsers = self.find_clusters_distance_sorted_jacc(userFlavor[0], self.flavClusters[1][rowFlavDistance[1]])
+
+
+        
+        newUtilIndices = []
+        for u in simUsers:
+            userIndex = int(u[1][len(u[1])-1])
+            newUtilIndices.append(userIndex)
+        newUtil = []
+        for index in newUtilIndices:
+            newUtil.append(self.utility[index])
+        overallRatings = np.sum(newUtil,axis=0)
+        ratedRestaurants = np.where(overallRatings>0)[0]
+
+        newSimRests = []
+        for r in simRests:
+            restIndex = int(r[1][-1])
+            if (user[0][restIndex] == 0) and (restIndex in ratedRestaurants):
+                newSimRests.append(r)
+
+        restRanking = np.flip(np.argsort(overallRatings))
+        print(overallRatings)
+        print(ratedRestaurants) #FIX
+        print(overallRatings[ratedRestaurants])
+        print(restRanking)
+
+        # for r in simRests:
+        #     restIndex = int(r[1][-1])
 
         resVect = self.dp.getRestaurantKeys()
-        #print(resVect)
+
         client = MongoClient('127.0.0.1',port=27017)
         db = client["yelpData"]
-        for r in simRests:
-            #print(r)
-            # print()
+        restNames = []
+        for r in newSimRests:
             bus = db.businesses.find_one({ "business_id": resVect[str(int(r[1][-1]))]})
             restNames.append((bus["name"],bus["stars"],bus["address"]))
+        
 
-        #rank restaurants?
+
 
         return restNames
 
+    def find_clusters_distance_sorted_jacc(self, row, centroids):
+        distanceList = []
+        for center in centroids:
+            distanceList.append([self.jaccardSim(row, center), tuple(center)])
+        distanceList.sort(key=lambda x: x[0]) 
+        return distanceList
+        
+    #x,y should be two arrays 
+    #Returns: 1 - jaccard similarity of x and y (ignoring negative values)
+    def jaccardSim(self,x,y):
+        intersectSize = 0
+        unionSize = 0
 
+        for c,val in enumerate(x[:-1]):
+            if val > 0:
+                unionSize +=1
+                if y[c] > 0:
+                    intersectSize +=1
 
+        for c,val in enumerate(y[:-1]):
+            if val >0 and x[c] <= 0:
+                unionSize +=1
+
+        return 1-(intersectSize/unionSize)
+        
     def evaluate(self):
         #crossValidation(utility, cat)
         pass

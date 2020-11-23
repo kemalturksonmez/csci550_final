@@ -2,15 +2,14 @@ import numpy as np
 from model import Model
 from DataProcessing import DataProcessing
 
-
 dp = DataProcessing()
 m = Model()
 
 # get user matrix
 testUser = dp.getUtilMatrix()
-# get individual user in their own 2D array
+# # get individual user in their own 2D array
 testUser = np.asarray([testUser[7]])
-# run
+# # run
 print(m.recommend(testUser))
 # print(testUser)
 # print(userFlavor)

@@ -33,28 +33,6 @@ def shuffleArray(utility):
     shuffle(indicies)
     return indicies
 
-# splits data based on a shuffled array of indicies
-# utility - user matrix
-# shuffledArray - shuffled array of indicies
-def testTrainSplit(utility, shuffledArray, currIndex):
-    utilLength = int(len(utility)/10)
-    numRows = ((utilLength * currIndex) + utilLength) - (utilLength * currIndex)
-
-    testData = np.zeros((numRows,len(utility[0])))
-    for i in range((utilLength * currIndex),(utilLength * currIndex) + utilLength):
-        testData[i - (utilLength * currIndex)] = utility[int(shuffledArray[i])]
-
-    trainData = np.zeros((len(utility) - numRows,len(utility[0])))
-    trainTracker = 0
-    for i in range(0,(utilLength * currIndex)):
-        trainData[trainTracker] = utility[int(shuffledArray[i])]
-        trainTracker += 1
-
-    for i in range((utilLength * currIndex) + utilLength, len(utility)):
-        trainData[trainTracker] = utility[int(shuffledArray[i])]
-        trainTracker += 1
-    return testData, trainData
-
 # splits a 2D array by removing last column
 # returns:
 # newMatrix - updated 2D array
@@ -98,29 +76,3 @@ def getDistanceList(testData, flavClustGroup, catClustGroup):
         print()
         # # Get the closest members to the user in a given cluster
         getSortedItems(row, catClustGroup[1][flavCatDistance[1]])
-
-
-# Runs cross validation on data
-def crossValidation(utility, cat):
-    cvNum = 1
-    shuffledArray = shuffleArray(utility)
-    d = DataProcessing()
-    c = Cluster()
-    # attach ids for users
-    # utility = d.attachId(utility)
-    for currIndex in range(cvNum):
-        # create flavor matrix
-        flavorTown = d.createFlavorMatrix(utility, cat)
-        # attach ids
-        flavorTown = d.attachId(flavorTown)
-
-        cat = d.attachId(cat)
-        # split data
-        testData, trainData = testTrainSplit(flavorTown, shuffledArray, currIndex)
-        
-        # create clusters
-        flavClustGroup, catClustGroup = getClusters(cat, trainData)
-        getDistanceList([testData[0]], flavClustGroup, catClustGroup)
-        
-
-
