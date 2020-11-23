@@ -29,14 +29,8 @@ class Model():
             # write flavor matrix
             self.dp.writeFlavorMatrix(self.flavorTown)
             self.createFlavorAndAttachIds()
-        else:
-            self.users = city[0]
-            self.restaurants = city[1]
-            self.cat = city[2]
-            self.utility = city[3]
-            self.flavorTown = city[4]
         
-        self.catClusters, self.flavClusters = hf.getClusters(self.cat,self.flavorTown)
+        
 
 
 
@@ -84,14 +78,22 @@ class Model():
         db = client["yelpData"]
         restNames = []
         finalRestIndices = []
+
+        # This is the case where there are no intersection of restaurants b/w similar users and restaurant cluster, so we just stick to the restaurant cluster
+        if len(newSimRests) == 0: 
+            newSimRests = simRests
+
+
+        businessIds = []
+
         for r in newSimRests:
             finalRestIndices.append(int(r[1][-1]))
             bus = db.businesses.find_one({ "business_id": resVect[str(int(r[1][-1]))]})
             restNames.append((bus["name"],bus["stars"],bus["address"]))
-            print(bus["name"])
-            print(overallRatings[int(r[1][-1])])
-            print()
-        
+            businessIds.append(int(r[1][-1]))
+
+
+
         #Please let this be the last list of indices I ever see
         finalfinalRestIndicesFinal = []
         for i in finalRestIndices:
@@ -100,7 +102,7 @@ class Model():
         rankedRestNames = [x for _,x in sorted(zip(finalfinalRestIndicesFinal,restNames))]
         
 
-        return rankedRestNames
+        return rankedRestNames,businessIds
 
     def find_clusters_distance_sorted_jacc(self, row, centroids):
         distanceList = []
@@ -110,7 +112,7 @@ class Model():
         return distanceList
         
     #x,y should be two arrays 
-    #Returns: 1 - jaccard similarity of x and y (ignoring negative values)
+    #Returns: 1 - jaccard similarity of x and y 
     def jaccardSim(self,x,y):
         intersectSize = 0
         unionSize = 0
@@ -124,8 +126,11 @@ class Model():
         for c,val in enumerate(y[:-1]):
             if val >0 and x[c] <= 0:
                 unionSize +=1
-
-        return 1-(intersectSize/unionSize)
+                
+        if unionSize == 0: #This is a person who has no taste and ruins our metrics. Shame on them
+            return 1
+        else:
+            return 1-(intersectSize/unionSize)
         
     def evaluate(self):
         #crossValidation(utility, cat)
@@ -136,6 +141,8 @@ class Model():
         self.flavorTown = self.dp.createFlavorMatrix(self.utility,self.cat)
         self.flavorTown = self.dp.attachId(self.flavorTown)
         self.cat = self.dp.attachId(self.cat)
+
+        self.catClusters, self.flavClusters = hf.getClusters(self.cat,self.flavorTown)
      
 
 

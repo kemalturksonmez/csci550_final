@@ -9,6 +9,13 @@ from cluster import Cluster
 from model import Model
 import helperFunctions as hf
 
+# def splitData(data,k,i):
+#     train = []
+#     test = []
+#     for j = range(len()):
+#     for j = range(len()):
+#     for j = range(len()):
+#     return train,test
 
 #This file will contain our method for model evaluation
 
@@ -19,48 +26,49 @@ import helperFunctions as hf
     #4 - for each test user, remove highest rated restaurant(?)
     #5 - identify discrepency b/w prediction and missing restaurant
 
+k = 10
+dp = DataProcessing()
+shuffledArray = hf.shuffleArray(dp.getUtilMatrix())
+
+cumulativeEvaluationValue = 0
+totalEvaluations = 0
+# Runs cross validation on data)
+users, restaurants, cat, utility, flavorTown = dp.getAllFiles() #[users, restaurants, cat, utility, flavorTown]
 
 
-# Runs cross validation on data
-def crossValidation(utility, cat):
-    cvNum = 1
-    shuffledArray = hf.shuffleArray(utility)
-    d = DataProcessing()
-    c = Cluster()
-    # attach ids for users
-    # utility = d.attachId(utility)
-    for currIndex in range(cvNum):
-        # create flavor matrix
-        flavorTown = d.createFlavorMatrix(utility, cat)
-        # attach ids
-        flavorTown = d.attachId(flavorTown)
+for i in range(k):
+    #Split train-test
+    testUtil, trainUtil = hf.testTrainSplit(utility, shuffledArray, i)
 
-        cat = d.attachId(cat)
-        # split data
-        testData, trainData = testTrainSplit(flavorTown, shuffledArray, currIndex)
+    #create training model
+    m = Model()
+    m.utility = trainUtil
+    m.flavorTown = dp.createFlavorMatrix(trainUtil,cat)
+    m.createFlavorAndAttachIds()
+
+    #Remove a review
+    testUserNorm = dp.getNormalizedUtilMat(testUtil)
+    removedRestaurants = []
+
+    for u in range(len(testUserNorm)):
+        notZeroIndices = np.where(testUserNorm[u] != 0)[0]
+        positiveIndices = np.where(testUserNorm[u] > 0)[0]
+        r = np.random.randint(low=0,high=len(notZeroIndices))
+        removedRestaurants.append(notZeroIndices[r])
+        testUtil[u][notZeroIndices[r]] = 0
+
+
+    #Get test recommendations
+    for count,user in enumerate(testUtil):
+        recs,ids = m.recommend(np.asarray([user]))
         
-        # create clusters
-        flavClustGroup, catClustGroup = hf.getClusters(cat, trainData)
-        hf.getDistanceList([testData[0]], flavClustGroup, catClustGroup)
+        if removedRestaurants[count] in ids:
+            if removedRestaurants[count] in positiveIndices:
+                cumulativeEvaluationValue+=1
+            totalEvaluations+=1
+        
 
-# splits data based on a shuffled array of indicies
-# utility - user matrix
-# shuffledArray - shuffled array of indicies
-def testTrainSplit(utility, shuffledArray, currIndex):
-    utilLength = int(len(utility)/10)
-    numRows = ((utilLength * currIndex) + utilLength) - (utilLength * currIndex)
+finalEvalValue = cumulativeEvaluationValue/totalEvaluations
+print("SUCCESS RATE:")
+print(finalEvalValue)
 
-    testData = np.zeros((numRows,len(utility[0])))
-    for i in range((utilLength * currIndex),(utilLength * currIndex) + utilLength):
-        testData[i - (utilLength * currIndex)] = utility[int(shuffledArray[i])]
-
-    trainData = np.zeros((len(utility) - numRows,len(utility[0])))
-    trainTracker = 0
-    for i in range(0,(utilLength * currIndex)):
-        trainData[trainTracker] = utility[int(shuffledArray[i])]
-        trainTracker += 1
-
-    for i in range((utilLength * currIndex) + utilLength, len(utility)):
-        trainData[trainTracker] = utility[int(shuffledArray[i])]
-        trainTracker += 1
-    return testData, trainData

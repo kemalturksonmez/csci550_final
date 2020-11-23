@@ -20,7 +20,22 @@ np.set_printoptions(threshold=np.inf)
 def getClusters(cat, flavorTown):
     flavor_centers, flavor_clusters = Cluster().get_centroids(flavorTown, 10, 0.001)
     cat_centers, cat_clusters = Cluster().get_centroids(cat, 7, 0.001)
+    
+    flavor_centers, flavor_clusters = removeEmpty(flavor_centers, flavor_clusters)
+    cat_centers, cat_clusters = removeEmpty(cat_centers, cat_clusters)
+    
+
     return (cat_centers, cat_clusters), (flavor_centers, flavor_clusters)
+
+def removeEmpty(arr,dic):
+    newArr = []
+    newDic = dict()
+    for x,y in zip(arr,dic):
+        if len(dic[y]) != 0:
+            newArr.append(x)
+            newDic[y] = dic[y] 
+
+    return newArr, newDic
 
 # creates a shuffled array of k indicies that will be used for splitting data
 # utility - user matrix
@@ -76,3 +91,25 @@ def getDistanceList(testData, flavClustGroup, catClustGroup):
         print()
         # # Get the closest members to the user in a given cluster
         getSortedItems(row, catClustGroup[1][flavCatDistance[1]])
+
+# splits data based on a shuffled array of indicies
+# utility - user matrix
+# shuffledArray - shuffled array of indicies
+def testTrainSplit(utility, shuffledArray, currIndex):
+    utilLength = int(len(utility[0])/10)
+    numRows = ((utilLength * currIndex) + utilLength) - (utilLength * currIndex)
+
+    testData = np.zeros((numRows,len(utility[0])))
+    for i in range((utilLength * currIndex),(utilLength * currIndex) + utilLength):
+        testData[i - (utilLength * currIndex)] = utility[int(shuffledArray[i])]
+
+    trainData = np.zeros((len(utility) - numRows,len(utility[0])))
+    trainTracker = 0
+    for i in range(0,(utilLength * currIndex)):
+        trainData[trainTracker] = utility[int(shuffledArray[i])]
+        trainTracker += 1
+
+    for i in range((utilLength * currIndex) + utilLength, len(utility)):
+        trainData[trainTracker] = utility[int(shuffledArray[i])]
+        trainTracker += 1
+    return testData, trainData
