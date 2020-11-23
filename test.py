@@ -10,12 +10,8 @@ m = Model()
 testUser = dp.getUtilMatrix()
 # get individual user in their own 2D array
 testUser = np.asarray([testUser[7]])
-# generate flavor profile
-userFlavor = m.getUserFlavor(testUser)
-# cluster on the model after generating user profile 
-m.createClusters()
 # run
-print(m.recommend(userFlavor))
+print(m.recommend(testUser))
 # print(testUser)
 # print(userFlavor)
 # print("BEFORE")

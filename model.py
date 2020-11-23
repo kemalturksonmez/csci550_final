@@ -20,31 +20,25 @@ class Model():
         self.cluster = Cluster()
 
         if city is None:
-            self.users, self.restaurants, self.cat, self.utility, self.flavorTown = self.dp.getAllFiles()          
+            self.users, self.restaurants, self.cat, self.utility, self.flavorTown = self.dp.getAllFiles()         
+            self.createFlavorAndAttachIds() 
         elif type(city) == type('string'):
             self.users, self.restaurants = self.dp.initialDataProcessing(city)
             self.cat, self.utility = self.dp.createMatrices()
             self.flavorTown = self.dp.createFlavorMatrix(self.utility,self.cat)
             # write flavor matrix
             self.dp.writeFlavorMatrix(self.flavorTown)
+            self.createFlavorAndAttachIds()
         else:
             self.users = city[0]
             self.restaurants = city[1]
             self.cat = city[2]
             self.utility = city[3]
             self.flavorTown = city[4]
-
         
-    # creates cluster
-    def createClusters(self):
-        self.flavorTown = self.dp.attachId(self.flavorTown)
-        self.cat = self.dp.attachId(self.cat)
-        #Get clusters for restaurants and users
         self.catClusters, self.flavClusters = hf.getClusters(self.cat,self.flavorTown)
 
-    # gets a user's flavor profile
-    def getUserFlavor(self, user):
-        return self.dp.createFlavorMatrix(user,self.cat)
+
 
     # flavClustGroup -> tuple = Contains clusters centers and clusters of the flavor group
     # flavClustGroup -> 0 = Cluster centers
@@ -53,8 +47,9 @@ class Model():
     # catClustGroup -> 0 = Cluster centers
     # catClustGroup -> 1 = Dictionary containing clusters, key is the tuple of the clusters centers
     # returns: list of restaurants in closest cluster to our identified flavor/user cluster
-    def recommend(self, userFlavor):
-        
+    def recommend(self, user):
+        userFlavor = self.dp.createFlavorMatrix(user,self.cat[:,:-1])
+        userFlavor = self.dp.attachId(userFlavor)
         # Find the closest flavor cluster
         rowFlavDistance = (self.cluster.find_clusters_distance_sorted(userFlavor, self.flavClusters[0]))[0]
         # # Find the category cluster thats closest to the flavor cluster
@@ -84,11 +79,11 @@ class Model():
         #crossValidation(utility, cat)
         pass
 
-    # def createFlavorAndAttachIds(self):
-    #     #Create our flavorTown matrix
-    #     self.flavorTown = self.dp.createFlavorMatrix(self.utility,self.cat)
-    #     self.flavorTown = self.dp.attachId(self.flavorTown)
-    #     self.cat = self.dp.attachId(self.cat)
+    def createFlavorAndAttachIds(self):
+        #Create our flavorTown matrix
+        self.flavorTown = self.dp.createFlavorMatrix(self.utility,self.cat)
+        self.flavorTown = self.dp.attachId(self.flavorTown)
+        self.cat = self.dp.attachId(self.cat)
      
 
 
