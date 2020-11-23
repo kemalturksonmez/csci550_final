@@ -77,27 +77,30 @@ class Model():
                 newSimRests.append(r)
 
         restRanking = np.flip(np.argsort(overallRatings))
-        print(overallRatings)
-        print(ratedRestaurants) #FIX
-        print(overallRatings[ratedRestaurants])
-        print(restRanking)
-
-        # for r in simRests:
-        #     restIndex = int(r[1][-1])
 
         resVect = self.dp.getRestaurantKeys()
 
         client = MongoClient('127.0.0.1',port=27017)
         db = client["yelpData"]
         restNames = []
+        finalRestIndices = []
         for r in newSimRests:
+            finalRestIndices.append(int(r[1][-1]))
             bus = db.businesses.find_one({ "business_id": resVect[str(int(r[1][-1]))]})
             restNames.append((bus["name"],bus["stars"],bus["address"]))
+            print(bus["name"])
+            print(overallRatings[int(r[1][-1])])
+            print()
+        
+        #Please let this be the last list of indices I ever see
+        finalfinalRestIndicesFinal = []
+        for i in finalRestIndices:
+            finalfinalRestIndicesFinal.append(np.where(restRanking==i))
+
+        rankedRestNames = [x for _,x in sorted(zip(finalfinalRestIndicesFinal,restNames))]
         
 
-
-
-        return restNames
+        return rankedRestNames
 
     def find_clusters_distance_sorted_jacc(self, row, centroids):
         distanceList = []
