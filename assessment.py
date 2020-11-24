@@ -26,26 +26,28 @@ import helperFunctions as hf
     #4 - for each test user, remove highest rated restaurant(?)
     #5 - identify discrepency b/w prediction and missing restaurant
 
-k = 10
+k = 1
 dp = DataProcessing()
 shuffledArray = hf.shuffleArray(dp.getUtilMatrix())
 
 cumulativeEvaluationValue = 0
 totalEvaluations = 0
-# Runs cross validation on data)
+# Runs cross validation on data
 users, restaurants, cat, utility, flavorTown = dp.getAllFiles() #[users, restaurants, cat, utility, flavorTown]
 
-
 for i in range(k):
+    print("starting k-folds")
     #Split train-test
     testUtil, trainUtil = hf.testTrainSplit(utility, shuffledArray, i)
 
+    print("creating training")
     #create training model
     m = Model()
     m.utility = trainUtil
     m.flavorTown = dp.createFlavorMatrix(trainUtil,cat)
     m.createFlavorAndAttachIds()
 
+    print("removing reviews")
     #Remove a review
     testUserNorm = dp.getNormalizedUtilMat(testUtil)
     removedRestaurants = []
@@ -57,16 +59,17 @@ for i in range(k):
         removedRestaurants.append(notZeroIndices[r])
         testUtil[u][notZeroIndices[r]] = 0
 
-
+    print("recommending")
     #Get test recommendations
     for count,user in enumerate(testUtil):
         recs,ids = m.recommend(np.asarray([user]))
+        print(recs,ids)
         
         if removedRestaurants[count] in ids:
             if removedRestaurants[count] in positiveIndices:
                 cumulativeEvaluationValue+=1
             totalEvaluations+=1
-        
+
 
 finalEvalValue = cumulativeEvaluationValue/totalEvaluations
 print("SUCCESS RATE:")

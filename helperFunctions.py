@@ -5,9 +5,6 @@ import random
 from numpy.random import shuffle
 from DataProcessing import DataProcessing
 from cluster import Cluster
-np.set_printoptions(threshold=np.inf)
-
-
 
 # gets clusters for flavor town and cat
 # cat - category matrix
@@ -18,8 +15,8 @@ np.set_printoptions(threshold=np.inf)
 # cat_centers - centers of category clusters
 # cat_clusters - members of category clusters
 def getClusters(cat, flavorTown):
-    flavor_centers, flavor_clusters = Cluster().get_centroids(flavorTown, 10, 0.001)
-    cat_centers, cat_clusters = Cluster().get_centroids(cat, 7, 0.001)
+    flavor_centers, flavor_clusters = Cluster().get_centroids(flavorTown, 100, 0.01)
+    cat_centers, cat_clusters = Cluster().get_centroids(cat, 100, 0.01)
     
     flavor_centers, flavor_clusters = removeEmpty(flavor_centers, flavor_clusters)
     cat_centers, cat_clusters = removeEmpty(cat_centers, cat_clusters)
@@ -96,7 +93,7 @@ def getDistanceList(testData, flavClustGroup, catClustGroup):
 # utility - user matrix
 # shuffledArray - shuffled array of indicies
 def testTrainSplit(utility, shuffledArray, currIndex):
-    utilLength = int(len(utility[0])/10)
+    utilLength = int(len(utility[0])/600)
     numRows = ((utilLength * currIndex) + utilLength) - (utilLength * currIndex)
 
     testData = np.zeros((numRows,len(utility[0])))

@@ -101,7 +101,10 @@ class Model():
 
         rankedRestNames = [x for _,x in sorted(zip(finalfinalRestIndicesFinal,restNames))]
         
-
+        if len(businessIds) > 100:
+            rankedRestNames = rankedRestNames[0:99]
+            businessIds = businessIds[0:99]
+            
         return rankedRestNames,businessIds
 
     def find_clusters_distance_sorted_jacc(self, row, centroids):
@@ -126,7 +129,7 @@ class Model():
         for c,val in enumerate(y[:-1]):
             if val >0 and x[c] <= 0:
                 unionSize +=1
-                
+
         if unionSize == 0: #This is a person who has no taste and ruins our metrics. Shame on them
             return 1
         else:
@@ -144,6 +147,3 @@ class Model():
 
         self.catClusters, self.flavClusters = hf.getClusters(self.cat,self.flavorTown)
      
-
-
-
