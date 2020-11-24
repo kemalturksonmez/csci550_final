@@ -12,7 +12,7 @@ testUser = dp.getUtilMatrix()
 testUser = np.asarray([testUser[10]])
 
 print("Making model")
-m = Model()
+m = Model('Montreal')
 
 print("recommending")
 print(m.recommend(testUser))

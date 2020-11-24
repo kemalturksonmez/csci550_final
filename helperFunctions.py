@@ -15,8 +15,8 @@ from cluster import Cluster
 # cat_centers - centers of category clusters
 # cat_clusters - members of category clusters
 def getClusters(cat, flavorTown):
-    flavor_centers, flavor_clusters = Cluster().get_centroids(flavorTown, 100, 0.01)
-    cat_centers, cat_clusters = Cluster().get_centroids(cat, 100, 0.01)
+    flavor_centers, flavor_clusters = Cluster().get_centroids(flavorTown, 10, 0.001)
+    cat_centers, cat_clusters = Cluster().get_centroids(cat, 7, 0.001)
     
     flavor_centers, flavor_clusters = removeEmpty(flavor_centers, flavor_clusters)
     cat_centers, cat_clusters = removeEmpty(cat_centers, cat_clusters)
@@ -93,12 +93,13 @@ def getDistanceList(testData, flavClustGroup, catClustGroup):
 # utility - user matrix
 # shuffledArray - shuffled array of indicies
 def testTrainSplit(utility, shuffledArray, currIndex):
-    utilLength = int(len(utility[0])/600)
+    utilLength = int(len(utility)/10)
     numRows = ((utilLength * currIndex) + utilLength) - (utilLength * currIndex)
 
     testData = np.zeros((numRows,len(utility[0])))
     for i in range((utilLength * currIndex),(utilLength * currIndex) + utilLength):
-        testData[i - (utilLength * currIndex)] = utility[int(shuffledArray[i])]
+        if i < len(utility):
+            testData[i - (utilLength * currIndex)] = utility[int(shuffledArray[i])]
 
     trainData = np.zeros((len(utility) - numRows,len(utility[0])))
     trainTracker = 0

@@ -26,7 +26,7 @@ import helperFunctions as hf
     #4 - for each test user, remove highest rated restaurant(?)
     #5 - identify discrepency b/w prediction and missing restaurant
 
-k = 1
+k = 10
 dp = DataProcessing()
 shuffledArray = hf.shuffleArray(dp.getUtilMatrix())
 
@@ -70,6 +70,8 @@ for i in range(k):
                 cumulativeEvaluationValue+=1
             totalEvaluations+=1
 
+# if totalEvaluations == 0:
+#     totalEvaluations = 1
 
 finalEvalValue = cumulativeEvaluationValue/totalEvaluations
 print("SUCCESS RATE:")
