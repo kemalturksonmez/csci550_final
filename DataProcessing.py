@@ -56,7 +56,7 @@ class DataProcessing:
 
         newUsers = dict()
         for user,value in self.users.items():
-            if value[0] < 3:
+            if value[0] < 5:
                 pass
             else:
                 for review in range(1,len(value)):
@@ -127,7 +127,7 @@ class DataProcessing:
         for userNum,user in enumerate(utilMatrix):
             for revNum,review in enumerate(user):
                 if review != 0:
-                    norm_util[userNum][revNum] = float(review) - avgStars[userNum]
+                    norm_util[userNum][revNum] = float(review) - avgStars[userNum] + 1
                 revNum += 1
 
             userNum += 1
