@@ -1,5 +1,5 @@
 # cscsi550_final
-
+A recommender system for the Yelp dataset that uses both collaborative and content-based filtering to recommend suitable restaurants to users.
 # Start up your mongo daemon
 <p><code>$ mongod</p></code>
 
